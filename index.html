@@ -4,19 +4,23 @@
 <head>
     <title>Home</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.9.0/sql-wasm.js" onload integrity="sha512-PAyD/84QEfxE1X/H3RDJY9kqXtJObyGq6qA93+LnkMNWdTLHjcTKHsDOcz6Y5xAdsaMGItRP5vNs4vtj3/FRuw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sakura.css/css/sakura.css" type="text/css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
+
     <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 
 <body>
+    <main class="container">
     <h1>iNeedATitle</h1>
+    <p id="database-loading"><b>Loading database...</b></p>
     <form>
-        <textarea id="output" rows="10" cols="80"></textarea>
+        <textarea id="output" rows="10" cols="80" disabled></textarea>
         <input type="text" id="query" value="SELECT COUNT(*) FROM raw_data" style="width: 100%">
         <br>
-        <input type="button" value="Run Raw Query" onclick="run()">
+        <button type="button" value="Run Raw Query" onclick="run()" disabled>Run Raw Query</button>
     </form>
     <hr>
+    <section>
     <h2>Queries</h2>
     <h3>By Instructor</h3>
     <p>Find classes, and average grade for a given instructor</p>
@@ -25,7 +29,7 @@
     <input type="text" id="instructor" name="instructor" list="instructors">
     <datalist id="instructors" class="instructorDatalist">
     </datalist>
-    <button type="button" onclick="getClassesByInstructor()">Get Classes & Average Grades</button>
+    <button type="button" onclick="getClassesByInstructor()" disabled>Get Classes & Average Grades</button>
     <form>
         <div id="table-container"></div>
     </form>
@@ -36,12 +40,14 @@
     <input type="text" id="classCode" name="classCode" list="classCodes">
     <datalist id="classCodes" class="classCodeDatalist">
     </datalist>
-    <button type="button" onclick="getClassesByClassCode()">Get Instructors & Average Grades</button>
+    <button type="button" onclick="getClassesByClassCode()" disabled>Get Instructors & Average Grades</button>
     <form>
         <div id="table-container-class-codes"></div>
     </form>
+    </section>
     <br>
     <br>
+    </main>
     <script type="text/javascript">
         let SQL = undefined
         let db = undefined
@@ -90,6 +96,12 @@
                 classCodeDatalist.appendChild(option);
             }
 
+            document.getElementById("database-loading").textContent = "Database loaded!";
+            let buttons = document.getElementsByTagName("button");
+            for (let i = 0; i < buttons.length; i++) {
+                buttons[i].disabled = false;
+            }
+            
 
         }
 
@@ -118,7 +130,7 @@
         function getClassesByInstructor() {
             let instructor = document.getElementById("instructor").value;
 
-            let query = `SELECT CourseTitle, GROUP_CONCAT(DISTINCT YearTerm) AS YearTerms, MAX(Subject) AS Subject, MAX(Course) AS Course, ROUND(AVG(AVG_GRD), 2) AS AverageGrade FROM raw_data AS main WHERE insname1 = '${instructor}' OR insname2 = '${instructor}' OR insname3 = '${instructor}' GROUP BY CourseTitle`
+            let query = `SELECT  Subject || ' ' || Course as "Class", CourseTitle as "Title", GROUP_CONCAT(DISTINCT YearTerm) AS YearTerms, ROUND(AVG(AVG_GRD), 2) AS AverageGrade,  ROUND(AVG(PCT_A), 2) as "% A", ROUND(AVG(PCT_B), 2) as "% B", ROUND(AVG(PCT_C_MINUS_OR_BELOW), 2) as "% <= C-" FROM raw_data AS main WHERE insname1 = "${instructor.toUpperCase()}" OR insname2 = "${instructor.toUpperCase()}" OR insname3 = "${instructor.toUpperCase()}" GROUP BY CourseTitle`
             console.log(query);
 
             const results = db.exec(query);
@@ -163,7 +175,7 @@
 
         function getClassesByClassCode() {
             let classCode = document.getElementById("classCode").value;
-            let query = `SELECT YearTerm as YearTerms, insname1, AVG_GRD, PCT_A, PCT_B, PCT_C_MINUS_OR_BELOW FROM raw_data WHERE Subject || ' ' || Course = '${classCode}';`
+            let query = `SELECT YearTerm as "Year-Term", insname1 as Instructor, AVG_GRD as "Average Grade", PCT_A as "% A", PCT_B as "% B", PCT_C_MINUS_OR_BELOW as "% <= C-" FROM raw_data WHERE Subject || ' ' || Course = '${classCode.toUpperCase()}';`
 
             const results = db.exec(query);
             const result = results[0];
@@ -187,7 +199,7 @@
                 const row = document.createElement("tr");
                 for (let j = 0; j < rows[i].length; j++) {
                     const cell = document.createElement("td");
-                    if (columns[j] === "YearTerms") {
+                    if (columns[j] === "Year-Term") {
                         cell.textContent = convertYearTerm(rows[i][j]);
                     } else if (!isNaN(rows[i][j]) && rows[i][j] !== null) {
                         cell.textContent = parseFloat(rows[i][j]).toFixed(2);
@@ -211,7 +223,6 @@
         yearTerms = String(yearTerms);
     }
 
-    console.log(yearTerms);
     return yearTerms.split(',').map(term => {
         const year = term.slice(0, 4); // Assuming the year is 2000+
         const termCode = term.slice(-1); // Getting the last character for the term
