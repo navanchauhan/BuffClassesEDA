@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
     <title>Home</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.9.0/sql-wasm.js" onload integrity="sha512-PAyD/84QEfxE1X/H3RDJY9kqXtJObyGq6qA93+LnkMNWdTLHjcTKHsDOcz6Y5xAdsaMGItRP5vNs4vtj3/FRuw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
@@ -10,28 +11,43 @@
 <body>
     <h1>iNeedATitle</h1>
     <form>
-    <textarea id="output" rows="10" cols="80"></textarea>
-    <input type="text" id="query" value="SELECT COUNT(*) FROM raw_data" style="width: 100%">
-    <br>
-    <input type="button" value="Run Raw Query" onclick="run()">
+        <textarea id="output" rows="10" cols="80"></textarea>
+        <input type="text" id="query" value="SELECT COUNT(*) FROM raw_data" style="width: 100%">
+        <br>
+        <input type="button" value="Run Raw Query" onclick="run()">
     </form>
     <hr>
     <h2>Queries</h2>
     <h3>By Instructor</h3>
     <p>Find classes, and average grade for a given instructor</p>
-    <label for="instructor">Instructor:</label>
+    <p>Note: Since the instructor names are provided in the format Last Name, First Name, it is best if you start typing the last name first.</p>
+    <label for="instructor">Instructor</label>
     <input type="text" id="instructor" name="instructor" list="instructors">
     <datalist id="instructors" class="instructorDatalist">
-        </datalist>
-        <button type="button" onclick="getClassesByInstructor()">Get Class Averages</button>
+    </datalist>
+    <button type="button" onclick="getClassesByInstructor()">Get Classes & Average Grades</button>
     <form>
         <div id="table-container"></div>
+    </form>
+    <hr>
+    <h3>By Class Code</h3>
+    <p>Note: There is a space between the subject and course code. For example, "CSCI 1300"</p>
+    <label for="classCode">Class Code</label>
+    <input type="text" id="classCode" name="classCode" list="classCodes">
+    <datalist id="classCodes" class="classCodeDatalist">
+    </datalist>
+    <button type="button" onclick="getClassesByClassCode()">Get Instructors & Average Grades</button>
+    <form>
+        <div id="table-container-class-codes"></div>
+    </form>
+    <br>
+    <br>
     <script type="text/javascript">
         let SQL = undefined
         let db = undefined
 
         async function fetchDatabase(url) {
-        const response = await fetch(url);
+            const response = await fetch(url);
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
@@ -59,14 +75,29 @@
                 datalist.appendChild(option);
             }
 
+            let classCodeQuery = "SELECT DISTINCT Subject || ' ' || Course AS ClassCode FROM raw_data"
+            const classCodeResults = db.exec(classCodeQuery);
+
+            const classCodeResult = classCodeResults[0];
+            const classCodeColumns = classCodeResult.columns;
+            const classCodeRows = classCodeResult.values;
+
+            let classCodeDatalist = document.getElementById("classCodes");
+
+            for (let i = 0; i < classCodeRows.length; i++) {
+                let option = document.createElement("option");
+                option.value = classCodeRows[i][0];
+                classCodeDatalist.appendChild(option);
+            }
+
 
         }
 
         async function loadDatabase() {
-        SQL = await initSqlJs({
-            locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.9.0/sql-wasm.wasm`
-        });
-        fetchDatabase("./grades.sqlite");
+            SQL = await initSqlJs({
+                locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.9.0/sql-wasm.wasm`
+            });
+            fetchDatabase("./grades.sqlite");
         }
 
         loadDatabase();
@@ -78,61 +109,114 @@
             const columns = result.columns;
             const rows = result.values;
             const output = document.getElementById("output");
-            output.value = JSON.stringify({columns, rows}, null, 2);
+            output.value = JSON.stringify({
+                columns,
+                rows
+            }, null, 2);
         }
 
-function getClassesByInstructor() {
-    let instructor = document.getElementById("instructor").value;
+        function getClassesByInstructor() {
+            let instructor = document.getElementById("instructor").value;
 
-    let query = `SELECT CourseTitle, GROUP_CONCAT(DISTINCT YearTerm) AS YearTerms, MAX(Subject) AS Subject, MAX(Course) AS Course, ROUND(AVG(AVG_GRD), 2) AS AverageGrade FROM raw_data AS main WHERE insname1 = '${instructor}' OR insname2 = '${instructor}' OR insname3 = '${instructor}' GROUP BY CourseTitle`
-    console.log(query);
+            let query = `SELECT CourseTitle, GROUP_CONCAT(DISTINCT YearTerm) AS YearTerms, MAX(Subject) AS Subject, MAX(Course) AS Course, ROUND(AVG(AVG_GRD), 2) AS AverageGrade FROM raw_data AS main WHERE insname1 = '${instructor}' OR insname2 = '${instructor}' OR insname3 = '${instructor}' GROUP BY CourseTitle`
+            console.log(query);
 
-    const results = db.exec(query);
-    const result = results[0];
-    const columns = result.columns;
-    const rows = result.values; 
-    const tableContainer = document.getElementById("table-container");
-    const table = document.createElement("table");
-    const thead = document.createElement("thead");
-    const tbody = document.createElement("tbody");
-    const headerRow = document.createElement("tr");
+            const results = db.exec(query);
+            const result = results[0];
+            const columns = result.columns;
+            const rows = result.values;
+            const tableContainer = document.getElementById("table-container");
+            const table = document.createElement("table");
+            const thead = document.createElement("thead");
+            const tbody = document.createElement("tbody");
+            const headerRow = document.createElement("tr");
 
-    for (let i = 0; i < columns.length; i++) {
-        const headerCell = document.createElement("th");
-        headerCell.textContent = columns[i];
-        headerRow.appendChild(headerCell);
-    }
-
-    thead.appendChild(headerRow);
-
-    for (let i = 0; i < rows.length; i++) {
-        const row = document.createElement("tr");
-        for (let j = 0; j < rows[i].length; j++) {
-            const cell = document.createElement("td");
-            if (columns[j] === "YearTerms") {
-                cell.textContent = convertYearTerm(rows[i][j]);
-            } else if (!isNaN(rows[i][j]) && rows[i][j] !== null) {
-                cell.textContent = parseFloat(rows[i][j]).toFixed(2);
-            } else {
-                cell.textContent = rows[i][j];
+            for (let i = 0; i < columns.length; i++) {
+                const headerCell = document.createElement("th");
+                headerCell.textContent = columns[i];
+                headerRow.appendChild(headerCell);
             }
-            row.appendChild(cell);
+
+            thead.appendChild(headerRow);
+
+            for (let i = 0; i < rows.length; i++) {
+                const row = document.createElement("tr");
+                for (let j = 0; j < rows[i].length; j++) {
+                    const cell = document.createElement("td");
+                    if (columns[j] === "YearTerms") {
+                        cell.textContent = convertYearTerm(rows[i][j]);
+                    } else if (!isNaN(rows[i][j]) && rows[i][j] !== null) {
+                        cell.textContent = parseFloat(rows[i][j]).toFixed(2);
+                    } else {
+                        cell.textContent = rows[i][j];
+                    }
+                    row.appendChild(cell);
+                }
+                tbody.appendChild(row);
+            }
+
+            table.appendChild(thead);
+            table.appendChild(tbody);
+            tableContainer.innerHTML = "";
+            tableContainer.appendChild(table);
         }
-        tbody.appendChild(row);
+
+        function getClassesByClassCode() {
+            let classCode = document.getElementById("classCode").value;
+            let query = `SELECT YearTerm as YearTerms, insname1, AVG_GRD, PCT_A, PCT_B, PCT_C_MINUS_OR_BELOW FROM raw_data WHERE Subject || ' ' || Course = '${classCode}';`
+
+            const results = db.exec(query);
+            const result = results[0];
+            const columns = result.columns;
+            const rows = result.values;
+            const tableContainer = document.getElementById("table-container-class-codes");
+            const table = document.createElement("table");
+            const thead = document.createElement("thead");
+            const tbody = document.createElement("tbody");
+            const headerRow = document.createElement("tr");
+
+            for (let i = 0; i < columns.length; i++) {
+                const headerCell = document.createElement("th");
+                headerCell.textContent = columns[i];
+                headerRow.appendChild(headerCell);
+            }
+
+            thead.appendChild(headerRow);
+
+            for (let i = 0; i < rows.length; i++) {
+                const row = document.createElement("tr");
+                for (let j = 0; j < rows[i].length; j++) {
+                    const cell = document.createElement("td");
+                    if (columns[j] === "YearTerms") {
+                        cell.textContent = convertYearTerm(rows[i][j]);
+                    } else if (!isNaN(rows[i][j]) && rows[i][j] !== null) {
+                        cell.textContent = parseFloat(rows[i][j]).toFixed(2);
+                    } else {
+                        cell.textContent = rows[i][j];
+                    }
+                    row.appendChild(cell);
+                }
+                tbody.appendChild(row);
+            }
+
+            table.appendChild(thead);
+            table.appendChild(tbody);
+            tableContainer.innerHTML = "";
+            tableContainer.appendChild(table);
+        }
+
+        function convertYearTerm(yearTerms) {
+    // Convert yearTerms to a string if it's not
+    if (typeof yearTerms !== 'string') {
+        yearTerms = String(yearTerms);
     }
 
-    table.appendChild(thead);
-    table.appendChild(tbody);
-    tableContainer.innerHTML = "";
-    tableContainer.appendChild(table);
-}
-
-function convertYearTerm(yearTerms) {
+    console.log(yearTerms);
     return yearTerms.split(',').map(term => {
         const year = term.slice(0, 4); // Assuming the year is 2000+
         const termCode = term.slice(-1); // Getting the last character for the term
         let termName = '';
-        switch(termCode) {
+        switch (termCode) {
             case '1':
                 termName = 'Spring';
                 break;
@@ -149,7 +233,7 @@ function convertYearTerm(yearTerms) {
     }).join(', ');
 }
 
-
     </script>
 </body>
+
 </html>
