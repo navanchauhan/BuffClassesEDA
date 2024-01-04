@@ -2,7 +2,7 @@
 <html>
 
 <head>
-    <title>Home</title>
+    <title>CU Boulder Grades Database</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.9.0/sql-wasm.js" onload integrity="sha512-PAyD/84QEfxE1X/H3RDJY9kqXtJObyGq6qA93+LnkMNWdTLHjcTKHsDOcz6Y5xAdsaMGItRP5vNs4vtj3/FRuw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
 
@@ -24,7 +24,7 @@
     <h2>Queries</h2>
     <h3>By Instructor</h3>
     <p>Find classes, and average grade for a given instructor</p>
-    <p>Note: Since the instructor names are provided in the format Last Name, First Name, it is best if you start typing the last name first.</p>
+    <p>Since the instructor names are provided in the format <pre>Last Name, First Name</pre> It is best if you start typing the last name first.</p>
     <label for="instructor">Instructor</label>
     <input type="text" id="instructor" name="instructor" list="instructors">
     <datalist id="instructors" class="instructorDatalist">
@@ -130,7 +130,7 @@
         function getClassesByInstructor() {
             let instructor = document.getElementById("instructor").value;
 
-            let query = `SELECT  Subject || ' ' || Course as "Class", CourseTitle as "Title", GROUP_CONCAT(DISTINCT YearTerm) AS YearTerms, ROUND(AVG(AVG_GRD), 2) AS AverageGrade,  ROUND(AVG(PCT_A), 2) as "% A", ROUND(AVG(PCT_B), 2) as "% B", ROUND(AVG(PCT_C_MINUS_OR_BELOW), 2) as "% <= C-" FROM raw_data AS main WHERE insname1 = "${instructor.toUpperCase()}" OR insname2 = "${instructor.toUpperCase()}" OR insname3 = "${instructor.toUpperCase()}" GROUP BY CourseTitle`
+            let query = `SELECT  Subject || ' ' || Course as "Class", CourseTitle as "Title", GROUP_CONCAT(DISTINCT YearTerm) AS YearTerms, ROUND(AVG(AVG_GRD), 2) AS "Average Grade",  ROUND(AVG(PCT_A), 2) as "% A", ROUND(AVG(PCT_B), 2) as "% B", ROUND(AVG(PCT_C_MINUS_OR_BELOW), 2) as "% C- and below", ROUND(AVG(N_GRADE)) as "Average No. of Students" FROM raw_data AS main WHERE insname1 = "${instructor.toUpperCase()}" OR insname2 = "${instructor.toUpperCase()}" OR insname3 = "${instructor.toUpperCase()}" GROUP BY CourseTitle`
             console.log(query);
 
             const results = db.exec(query);
@@ -175,7 +175,7 @@
 
         function getClassesByClassCode() {
             let classCode = document.getElementById("classCode").value;
-            let query = `SELECT YearTerm as "Year-Term", insname1 as Instructor, AVG_GRD as "Average Grade", PCT_A as "% A", PCT_B as "% B", PCT_C_MINUS_OR_BELOW as "% <= C-" FROM raw_data WHERE Subject || ' ' || Course = '${classCode.toUpperCase()}';`
+            let query = `SELECT YearTerm as "Year-Term", insname1 as Instructor, AVG_GRD as "Average Grade", PCT_A as "% A", PCT_B as "% B", PCT_C_MINUS_OR_BELOW as "% C- and below", N_GRADE as "No. Graded" FROM raw_data WHERE Subject || ' ' || Course = '${classCode.toUpperCase()}';`
 
             const results = db.exec(query);
             const result = results[0];
