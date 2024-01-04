@@ -233,7 +233,7 @@
                 grade = ">= 0";
             }
 
-            let query = `SELECT DISTINCT Subject || ' ' || Course AS "Class Code", CourseTitle as "Title", AVG(AVG_GRD) AS "Average Grade"  FROM raw_data WHERE  (CrsPBADiv = '${division}' AND COURSE ${grade} ) AND Subject != 'APPM'  GROUP BY "Class Code", "Title"`
+            let query = `SELECT DISTINCT Subject || ' ' || Course AS "Class Code", CourseTitle as "Title", AVG(AVG_GRD) AS "Average Grade", AVG(PCT_A) as "% A", AVG(PCT_B) as "% B", AVG(PCT_C_MINUS_OR_BELOW) as "% C- and below", AVG(N_GRADE) as "No. Graded"  FROM raw_data WHERE  (CrsPBADiv = '${division}' AND COURSE ${grade} ) AND Subject != 'APPM'  GROUP BY "Class Code", "Title"`
 
             console.log(query);
 
