@@ -151,7 +151,7 @@
             }, null, 2);
         }
 
-        function createTable(results, className) {
+        function createTable(results, className, rawQuery) {
             const result = results[0];
             const columns = result.columns;
             const rows = result.values;
@@ -190,6 +190,16 @@
             table.appendChild(tbody);
             tableContainer.innerHTML = "";
             tableContainer.appendChild(table);
+
+            const pre = document.createElement("pre")
+            pre.innerHTML = rawQuery
+
+            const details = document.createElement("details")
+            const summary = document.createElement("summary")
+            summary.innerText = "Raw SQL Query"
+            details.appendChild(summary)
+            details.appendChild(pre)
+            tableContainer.appendChild(details)
         }
 
         function getClassesByInstructor() {
@@ -199,7 +209,7 @@
             console.log(query);
 
             const results = db.exec(query);
-            createTable(results, "table-container")
+            createTable(results, "table-container", query)
             sorttable.makeSortable(document.getElementById("table-container").children[0]);
         }
 
@@ -208,7 +218,7 @@
             let query = `SELECT YearTerm as "YearTerms", insname1 as Instructor, AVG_GRD as "Average Grade", PCT_A as "% A", PCT_B as "% B", PCT_C_MINUS_OR_BELOW as "% C- and below", N_GRADE as "No. Graded" FROM raw_data WHERE Subject || ' ' || Course = '${classCode.toUpperCase()}';`
 
             const results = db.exec(query);
-            createTable(results, "table-container-class-codes")
+            createTable(results, "table-container-class-codes", query)
             sorttable.makeSortable(document.getElementById("table-container-class-codes").children[0]);
         }
 
@@ -238,7 +248,7 @@
             console.log(query);
 
             const results = db.exec(query);
-            createTable(results, "table-container-division")
+            createTable(results, "table-container-division", query)
             sorttable.makeSortable(document.getElementById("table-container-division").children[0]);
         }
 
