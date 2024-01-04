@@ -5,7 +5,7 @@
     <title>CU Boulder Grades Database</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.9.0/sql-wasm.js" onload integrity="sha512-PAyD/84QEfxE1X/H3RDJY9kqXtJObyGq6qA93+LnkMNWdTLHjcTKHsDOcz6Y5xAdsaMGItRP5vNs4vtj3/FRuw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
-
+    <script src="sorttable.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 
@@ -14,7 +14,7 @@
     <h1>iNeedATitle</h1>
     <p id="database-loading"><b>Loading database...</b></p>
     <form>
-        <textarea id="output" rows="10" cols="80" disabled></textarea>
+        <textarea id="output" rows="10" cols="80"></textarea>
         <input type="text" id="query" value="SELECT COUNT(*) FROM raw_data" style="width: 100%">
         <br>
         <button type="button" value="Run Raw Query" onclick="run()" disabled>Run Raw Query</button>
@@ -43,6 +43,30 @@
     <button type="button" onclick="getClassesByClassCode()" disabled>Get Instructors & Average Grades</button>
     <form>
         <div id="table-container-class-codes"></div>
+    </form>
+    <hr>
+    <h3>By Subject</h3>
+    <p>...</p>
+    <hr>
+    <h3>By A&S Division</h3>
+    <h4>Useful for finding electives</h4>
+    <p>Find classes, and average grade for a given A&S Division</p>
+    <label for="division">Division (AH, SS, or NS)</label>
+    <select name="division" id="division">
+        <option value="AH">Arts & Humanities</option>
+        <option value="SS" selected>Social Sciences</option>
+        <option value="NS">Natural Sciences</option>
+    </select>
+    <label for="grade">Upper or Lower Division</label>
+    <select name="grade" id="grade">
+        <option value="upper" selected>Upper Division (3XXX - 4XXXX)</option>
+        <option value="lower">Lower Division (1XXX - 2XXX)</option>
+        <option value="both">Both (1XXXX - 4XXXX)</option>
+        <option value="grad">Graduate Level (>= 5000)
+    </select>
+    <button type="button" onclick="getClassesByDivision()" disabled>Get Classes & Average Grades</button>
+    <form>
+        <div id="table-container-division"></div>
     </form>
     </section>
     <br>
@@ -127,18 +151,13 @@
             }, null, 2);
         }
 
-        function getClassesByInstructor() {
-            let instructor = document.getElementById("instructor").value;
-
-            let query = `SELECT  Subject || ' ' || Course as "Class", CourseTitle as "Title", GROUP_CONCAT(DISTINCT YearTerm) AS YearTerms, ROUND(AVG(AVG_GRD), 2) AS "Average Grade",  ROUND(AVG(PCT_A), 2) as "% A", ROUND(AVG(PCT_B), 2) as "% B", ROUND(AVG(PCT_C_MINUS_OR_BELOW), 2) as "% C- and below", ROUND(AVG(N_GRADE)) as "Average No. of Students" FROM raw_data AS main WHERE insname1 = "${instructor.toUpperCase()}" OR insname2 = "${instructor.toUpperCase()}" OR insname3 = "${instructor.toUpperCase()}" GROUP BY CourseTitle`
-            console.log(query);
-
-            const results = db.exec(query);
+        function createTable(results, className) {
             const result = results[0];
             const columns = result.columns;
             const rows = result.values;
-            const tableContainer = document.getElementById("table-container");
+            const tableContainer = document.getElementById(className);
             const table = document.createElement("table");
+            table.classList.add("sortable")
             const thead = document.createElement("thead");
             const tbody = document.createElement("tbody");
             const headerRow = document.createElement("tr");
@@ -173,48 +192,54 @@
             tableContainer.appendChild(table);
         }
 
-        function getClassesByClassCode() {
-            let classCode = document.getElementById("classCode").value;
-            let query = `SELECT YearTerm as "Year-Term", insname1 as Instructor, AVG_GRD as "Average Grade", PCT_A as "% A", PCT_B as "% B", PCT_C_MINUS_OR_BELOW as "% C- and below", N_GRADE as "No. Graded" FROM raw_data WHERE Subject || ' ' || Course = '${classCode.toUpperCase()}';`
+        function getClassesByInstructor() {
+            let instructor = document.getElementById("instructor").value;
+
+            let query = `SELECT  Subject || ' ' || Course as "Class", CourseTitle as "Title", GROUP_CONCAT(DISTINCT YearTerm) AS YearTerms, ROUND(AVG(AVG_GRD), 2) AS "Average Grade",  ROUND(AVG(PCT_A), 2) as "% A", ROUND(AVG(PCT_B), 2) as "% B", ROUND(AVG(PCT_C_MINUS_OR_BELOW), 2) as "% C- and below", ROUND(AVG(N_GRADE)) as "Average No. of Students" FROM raw_data AS main WHERE insname1 = "${instructor.toUpperCase()}" OR insname2 = "${instructor.toUpperCase()}" OR insname3 = "${instructor.toUpperCase()}" GROUP BY CourseTitle`
+            console.log(query);
 
             const results = db.exec(query);
-            const result = results[0];
-            const columns = result.columns;
-            const rows = result.values;
-            const tableContainer = document.getElementById("table-container-class-codes");
-            const table = document.createElement("table");
-            const thead = document.createElement("thead");
-            const tbody = document.createElement("tbody");
-            const headerRow = document.createElement("tr");
+            createTable(results, "table-container")
+            sorttable.makeSortable(document.getElementById("table-container").children[0]);
+        }
 
-            for (let i = 0; i < columns.length; i++) {
-                const headerCell = document.createElement("th");
-                headerCell.textContent = columns[i];
-                headerRow.appendChild(headerCell);
+        function getClassesByClassCode() {
+            let classCode = document.getElementById("classCode").value;
+            let query = `SELECT YearTerm as "YearTerms", insname1 as Instructor, AVG_GRD as "Average Grade", PCT_A as "% A", PCT_B as "% B", PCT_C_MINUS_OR_BELOW as "% C- and below", N_GRADE as "No. Graded" FROM raw_data WHERE Subject || ' ' || Course = '${classCode.toUpperCase()}';`
+
+            const results = db.exec(query);
+            createTable(results, "table-container-class-codes")
+            sorttable.makeSortable(document.getElementById("table-container-class-codes").children[0]);
+        }
+
+        function getClassesByDivision() {
+            let division = document.getElementById("division").value
+            let grade = document.getElementById("grade").value
+
+            switch (grade) {
+            case 'upper':
+                grade = "BETWEEN 3000 and 4999";
+                break;
+            case 'lower':
+                grade = "BETWEEN 0000 and 2999";
+                break;
+            case 'both':
+                grade = "BETWEEN 0000 and 4999";
+                break;
+            case 'grad':
+                grade = ">= 5000"
+                break;
+            default:
+                grade = ">= 0";
             }
 
-            thead.appendChild(headerRow);
+            let query = `SELECT DISTINCT Subject || ' ' || Course AS "Class Code", CourseTitle as "Title", AVG(AVG_GRD) AS "Average Grade"  FROM raw_data WHERE  (CrsPBADiv = '${division}' AND COURSE ${grade} ) AND Subject != 'APPM'  GROUP BY "Class Code", "Title"`
 
-            for (let i = 0; i < rows.length; i++) {
-                const row = document.createElement("tr");
-                for (let j = 0; j < rows[i].length; j++) {
-                    const cell = document.createElement("td");
-                    if (columns[j] === "Year-Term") {
-                        cell.textContent = convertYearTerm(rows[i][j]);
-                    } else if (!isNaN(rows[i][j]) && rows[i][j] !== null) {
-                        cell.textContent = parseFloat(rows[i][j]).toFixed(2);
-                    } else {
-                        cell.textContent = rows[i][j];
-                    }
-                    row.appendChild(cell);
-                }
-                tbody.appendChild(row);
-            }
+            console.log(query);
 
-            table.appendChild(thead);
-            table.appendChild(tbody);
-            tableContainer.innerHTML = "";
-            tableContainer.appendChild(table);
+            const results = db.exec(query);
+            createTable(results, "table-container-division")
+            sorttable.makeSortable(document.getElementById("table-container-division").children[0]);
         }
 
         function convertYearTerm(yearTerms) {
