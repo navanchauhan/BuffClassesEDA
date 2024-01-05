@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
     <script src="sorttable.js"></script>
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <script defer data-domain="web.navan.dev" src="https://plausible.io/js/script.js"></script>
 </head>
 
 <body>
@@ -192,7 +193,7 @@
             tableContainer.appendChild(table);
 
             const pre = document.createElement("pre")
-            pre.innerHTML = rawQuery
+            pre.innerHTML = "\n" + rawQuery + "\n\n\n"
 
             const details = document.createElement("details")
             const summary = document.createElement("summary")
