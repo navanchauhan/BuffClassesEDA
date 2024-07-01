@@ -1,4 +1,4 @@
-# CU Boulder Grade Data
+# CU Boulder Grades Database
 
 ## Steps to Update Database:
 
