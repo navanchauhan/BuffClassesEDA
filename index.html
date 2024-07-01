@@ -1,121 +1,96 @@
 <!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>CU Boulder Grades Database</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.9.0/sql-wasm.js" onload integrity="sha512-PAyD/84QEfxE1X/H3RDJY9kqXtJObyGq6qA93+LnkMNWdTLHjcTKHsDOcz6Y5xAdsaMGItRP5vNs4vtj3/FRuw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <script src="sorttable.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.1/css/bulma.min.css">
-    <script defer data-domain="web.navan.dev" src="https://plausible.io/js/script.js"></script>
-  </head>
-  <body>
-  <section class="section">
-    <div class="container">
-      <h1 class="title is-1">
-        CU Boulder Grades Database
-      </h1>
-      <p class="subtitle">
-        Database contains data from <strong>Spring 2016</strong> to <strong>Spring 2024</strong>
-      </p>
-      <form>
-        <textarea id="output" rows="10" cols="80" class="textarea"></textarea>
-        <input type="text" id="query" value="SELECT COUNT(*) FROM raw_data" class="input">
-        <button type="button" value="Run Raw Query" onclick="run()" class="button is-info is-loading is-fullwidth" disabled>Run Raw Query</button>
-      </form>
-    </div>
-  </section>
-  <section class="section">
-    <div class="container">
-      <h2 class="title is-2">
-        Search
-      </h2>
-      <h3 class="title is-3">
-        By Instructor
-      </h3>
-      <p class="subtitle">Find classes, and average grades for a given instructor</p>
-      <p>Since CU provides instructor names in the format <pre>Last Name, First Name</pre> It is best if you start typing the last name first.</p>
-      <div class="field is-grouped pt-2">
-      <div class="control is-expanded">
-        <input type="text" id="instructor" name="instructor" list="instructors" class="input is-medium" placeholder="Instructor">
-        <datalist id="instructors"></datalist>
-      </div>
-      <div class="control">
-        <button type="button" onclick="getClassesByInstructor()" class="button is-primary is-loading is-medium" disabled>Get Classes & Average Grades</button>
-      </div>
-      </div>
-        <form>
-          <div id="table-container"></div>
-        </form>
-      </div>
-      <div class="container">
-        <h3 class="title is-3">
-          By Class Code
-        </h3>
-        <p>There is a space between the subject and course code. For example: <pre>CSCI 1300</pre></p>
-        <div class="field is-grouped pt-2">
-          <div class="control is-expanded">
-            <input type="text" id="classCode" name="classCode" list="classCodes" class="input is-medium" placeholder="Class Code">
-            <datalist id="classCodes"></datalist>
-          </div>
-          <div class="control">
-            <button type="button" onclick="getClassesByClassCode()" class="button is-primary is-loading is-medium" disabled>Get Instructors & Average Grades</button>
-          </div>
-          
-        </div>
-        <form>
-          <div id="table-container-class-codes"></div>
-        </form>
-      </div>
-      <div class="container">
-        <h3 class="title is-3">
-          By A&S Division
-        </h3>
-        <p class="subtitle">Useful for finding electives as you can find classes, and average grade for a given A&S division</p>
-
-          <div class="field">
-            <label for="division" class="label">Division (AH, SS, or NS)</label>
-            <div class="control">
-                <div class="select is-fullwidth">
-                  <select name="division" id="division" >
-                    <option value="AH">Arts & Humanities</option>
-                    <option value="SS" selected>Social Sciences</option>
-                    <option value="NS">Natural Sciences</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          <div class="field">
-            <label for="grade" class="label">Upper or Lower Division</label>
-            <div class="control">
-              <div class="select is-fullwidth">
-                <select name="grade" id="grade">
-                  <option value="upper" selected>Upper Division (3XXX - 4XXXX)</option>
-                  <option value="lower">Lower Division (1XXX - 2XXX)</option>
-                  <option value="both">Both (1XXXX - 4XXXX)</option>
-                  <option value="grad">Graduate Level (>= 5000)</option>
-                </select>
-              </div>
-            </div>
-          </div>
-      
-        
-        
-        <button type="button" onclick="getClassesByDivision()" class="button is-primary is-loading is-fullwidth is-medium" disabled>Get Classes & Average Grades</button>
-        <form>
-          <div id="table-container-division"></div>
-        </form>
-      </div>
-    </section>
-    <footer class="footer">
-        <div class="content has-text-centered">
-            <p>
-                Data sourced from CU Boulder's <a href="https://www.colorado.edu/oda/student-data/courses">Data & Analytics</a> group. The source code is licensed
-      <a href="http://opensource.org/licenses/mit-license.php">MIT</a> and available on <a href="https://github.com/navanchauhan/BuffClassesEDA">GitHub</a>
-            </p>
-        </div>
-    </footer>
-        <script type="text/javascript">
+<html lang="en">
+ <head> 
+  <meta charset="utf-8"> 
+  <meta name="viewport" content="width=device-width, initial-scale=1"> 
+  <title>CU Boulder Grades Database</title> 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.9.0/sql-wasm.js" onload="" integrity="sha512-PAyD/84QEfxE1X/H3RDJY9kqXtJObyGq6qA93+LnkMNWdTLHjcTKHsDOcz6Y5xAdsaMGItRP5vNs4vtj3/FRuw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script> 
+  <script src="sorttable.js"></script> 
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.1/css/bulma.min.css"> 
+  <script defer="" data-domain="web.navan.dev" src="https://plausible.io/js/script.js"></script> 
+ </head> 
+ <body> 
+  <section class="section"> 
+   <div class="container"> 
+    <h1 class="title is-1"> CU Boulder Grades Database </h1> 
+    <p class="subtitle"> Database contains data from <strong>Spring 2016</strong> to <strong>Spring 2024</strong> </p> 
+    <form> 
+     <textarea id="output" rows="10" cols="80" class="textarea"></textarea> 
+     <input type="text" id="query" value="SELECT COUNT(*) FROM raw_data" class="input"> 
+     <button type="button" value="Run Raw Query" onclick="run()" class="button is-info is-loading is-fullwidth" disabled="">Run Raw Query</button> 
+    </form> 
+   </div> 
+  </section> 
+  <section class="section"> 
+   <div class="container"> 
+    <h2 class="title is-2"> Search </h2> 
+    <h3 class="title is-3"> By Instructor </h3> 
+    <p class="subtitle">Find classes, and average grades for a given instructor</p> 
+    <p>Since CU provides instructor names in the format </p>
+    <pre>Last Name, First Name</pre> It is best if you start typing the last name first.
+    <p></p> 
+    <div class="field is-grouped pt-2"> 
+     <div class="control is-expanded"> 
+      <input type="text" id="instructor" name="instructor" list="instructors" class="input is-medium" placeholder="Instructor"> 
+      <datalist id="instructors"></datalist> 
+     </div> 
+     <div class="control"> 
+      <button type="button" onclick="getClassesByInstructor()" class="button is-primary is-loading is-medium" disabled="">Get Classes &amp; Average Grades</button> 
+     </div> 
+    </div> 
+    <form> 
+     <div id="table-container"></div> 
+    </form> 
+   </div> 
+   <div class="container"> 
+    <h3 class="title is-3"> By Class Code </h3> 
+    <p>There is a space between the subject and course code. For example: </p>
+    <pre>CSCI 1300</pre>
+    <p></p> 
+    <div class="field is-grouped pt-2"> 
+     <div class="control is-expanded"> 
+      <input type="text" id="classCode" name="classCode" list="classCodes" class="input is-medium" placeholder="Class Code"> 
+      <datalist id="classCodes"></datalist> 
+     </div> 
+     <div class="control"> 
+      <button type="button" onclick="getClassesByClassCode()" class="button is-primary is-loading is-medium" disabled="">Get Instructors &amp; Average Grades</button> 
+     </div> 
+    </div> 
+    <form> 
+     <div id="table-container-class-codes"></div> 
+    </form> 
+   </div> 
+   <div class="container"> 
+    <h3 class="title is-3"> By A&amp;S Division </h3> 
+    <p class="subtitle">Useful for finding electives as you can find classes, and average grade for a given A&amp;S division</p> 
+    <div class="field"> 
+     <label for="division" class="label">Division (AH, SS, or NS)</label> 
+     <div class="control"> 
+      <div class="select is-fullwidth"> 
+       <select name="division" id="division"> <option value="AH">Arts &amp; Humanities</option> <option value="SS" selected="">Social Sciences</option> <option value="NS">Natural Sciences</option> </select> 
+      </div> 
+     </div> 
+    </div> 
+    <div class="field"> 
+     <label for="grade" class="label">Upper or Lower Division</label> 
+     <div class="control"> 
+      <div class="select is-fullwidth"> 
+       <select name="grade" id="grade"> <option value="upper" selected="">Upper Division (3XXX - 4XXXX)</option> <option value="lower">Lower Division (1XXX - 2XXX)</option> <option value="both">Both (1XXXX - 4XXXX)</option> <option value="grad">Graduate Level (&gt;= 5000)</option> </select> 
+      </div> 
+     </div> 
+    </div> 
+    <button type="button" onclick="getClassesByDivision()" class="button is-primary is-loading is-fullwidth is-medium" disabled="">Get Classes &amp; Average Grades</button> 
+    <form> 
+     <div id="table-container-division"></div> 
+    </form> 
+   </div> 
+  </section> 
+  <footer class="footer"> 
+   <div class="content has-text-centered"> 
+    <p> Data sourced from CU Boulder's <a href="https://www.colorado.edu/oda/student-data/courses">Data &amp; Analytics</a> group. The source code is licensed <a href="http://opensource.org/licenses/mit-license.php">MIT</a> and available on <a href="https://github.com/navanchauhan/BuffClassesEDA">GitHub</a> </p> 
+   </div> 
+  </footer> 
+  <script>
         let SQL = undefined
         let db = undefined
 
@@ -324,6 +299,6 @@
     }).join(', ');
 }
 
-    </script>
-  </body>
+    </script>  
+ </body>
 </html>
