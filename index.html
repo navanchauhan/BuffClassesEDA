@@ -1,80 +1,113 @@
 <!DOCTYPE html>
 <html>
-
-<head>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>CU Boulder Grades Database</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.9.0/sql-wasm.js" onload integrity="sha512-PAyD/84QEfxE1X/H3RDJY9kqXtJObyGq6qA93+LnkMNWdTLHjcTKHsDOcz6Y5xAdsaMGItRP5vNs4vtj3/FRuw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@1/css/pico.min.css">
     <script src="sorttable.js"></script>
-    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.1/css/bulma.min.css">
     <script defer data-domain="web.navan.dev" src="https://plausible.io/js/script.js"></script>
-</head>
+  </head>
+  <body>
+  <section class="section">
+    <div class="container">
+      <h1 class="title is-1">
+        CU Boulder Grades Database
+      </h1>
+      <p class="subtitle">
+        Database contains data from <strong>Spring 2016</strong> to <strong>Spring 2024</strong>
+      </p>
+      <form>
+        <textarea id="output" rows="10" cols="80" class="textarea"></textarea>
+        <input type="text" id="query" value="SELECT COUNT(*) FROM raw_data" class="input">
+        <button type="button" value="Run Raw Query" onclick="run()" class="button is-info is-loading is-fullwidth" disabled>Run Raw Query</button>
+      </form>
+    </div>
+  </section>
+  <section class="section">
+    <div class="container">
+      <h2 class="title is-2">
+        Search
+      </h2>
+      <h3 class="title is-3">
+        By Instructor
+      </h3>
+      <p class="subtitle">Find classes, and average grades for a given instructor</p>
+      <p>Since CU provides instructor names in the format <pre>Last Name, First Name</pre> It is best if you start typing the last name first.</p>
+      <div class="field is-grouped pt-2">
+      <div class="control is-expanded">
+        <input type="text" id="instructor" name="instructor" list="instructors" class="input is-medium" placeholder="Instructor">
+        <datalist id="instructors"></datalist>
+      </div>
+      <div class="control">
+        <button type="button" onclick="getClassesByInstructor()" class="button is-primary is-loading is-medium" disabled>Get Classes & Average Grades</button>
+      </div>
+      </div>
+        <form>
+          <div id="table-container"></div>
+        </form>
+      </div>
+      <div class="container">
+        <h3 class="title is-3">
+          By Class Code
+        </h3>
+        <p>There is a space between the subject and course code. For example: <pre>CSCI 1300</pre></p>
+        <div class="field is-grouped pt-2">
+          <div class="control is-expanded">
+            <input type="text" id="classCode" name="classCode" list="classCodes" class="input is-medium" placeholder="Class Code">
+            <datalist id="classCodes"></datalist>
+          </div>
+          <div class="control">
+            <button type="button" onclick="getClassesByClassCode()" class="button is-primary is-loading is-medium" disabled>Get Instructors & Average Grades</button>
+          </div>
+          
+        </div>
+        <form>
+          <div id="table-container-class-codes"></div>
+        </form>
+      </div>
+      <div class="container">
+        <h3 class="title is-3">
+          By A&S Division
+        </h3>
+        <p class="subtitle">Useful for finding electives as you can find classes, and average grade for a given A&S division</p>
 
-<body>
-    <main class="container">
-    <h1>iNeedATitle</h1>
-    <p>Last Semester to be included in the database: Fall 2023</p>
-    <p id="database-loading"><b>Loading database...</b></p>
-    <form>
-        <textarea id="output" rows="10" cols="80"></textarea>
-        <input type="text" id="query" value="SELECT COUNT(*) FROM raw_data" style="width: 100%">
-        <br>
-        <button type="button" value="Run Raw Query" onclick="run()" disabled>Run Raw Query</button>
-    </form>
-    <hr>
-    <section>
-    <h2>Queries</h2>
-    <h3>By Instructor</h3>
-    <p>Find classes, and average grade for a given instructor</p>
-    <p>Since the instructor names are provided in the format <pre>Last Name, First Name</pre> It is best if you start typing the last name first.</p>
-    <label for="instructor">Instructor</label>
-    <input type="text" id="instructor" name="instructor" list="instructors">
-    <datalist id="instructors" class="instructorDatalist">
-    </datalist>
-    <button type="button" onclick="getClassesByInstructor()" disabled>Get Classes & Average Grades</button>
-    <form>
-        <div id="table-container"></div>
-    </form>
-    <hr>
-    <h3>By Class Code</h3>
-    <p>Note: There is a space between the subject and course code. For example, "CSCI 1300"</p>
-    <label for="classCode">Class Code</label>
-    <input type="text" id="classCode" name="classCode" list="classCodes">
-    <datalist id="classCodes" class="classCodeDatalist">
-    </datalist>
-    <button type="button" onclick="getClassesByClassCode()" disabled>Get Instructors & Average Grades</button>
-    <form>
-        <div id="table-container-class-codes"></div>
-    </form>
-    <hr>
-    <h3>By Subject</h3>
-    <p>...</p>
-    <hr>
-    <h3>By A&S Division</h3>
-    <h4>Useful for finding electives</h4>
-    <p>Find classes, and average grade for a given A&S Division</p>
-    <label for="division">Division (AH, SS, or NS)</label>
-    <select name="division" id="division">
-        <option value="AH">Arts & Humanities</option>
-        <option value="SS" selected>Social Sciences</option>
-        <option value="NS">Natural Sciences</option>
-    </select>
-    <label for="grade">Upper or Lower Division</label>
-    <select name="grade" id="grade">
-        <option value="upper" selected>Upper Division (3XXX - 4XXXX)</option>
-        <option value="lower">Lower Division (1XXX - 2XXX)</option>
-        <option value="both">Both (1XXXX - 4XXXX)</option>
-        <option value="grad">Graduate Level (>= 5000)
-    </select>
-    <button type="button" onclick="getClassesByDivision()" disabled>Get Classes & Average Grades</button>
-    <form>
-        <div id="table-container-division"></div>
-    </form>
+          <div class="field">
+            <label for="division" class="label">Division (AH, SS, or NS)</label>
+            <div class="control">
+                <div class="select is-fullwidth">
+                  <select name="division" id="division" >
+                    <option value="AH">Arts & Humanities</option>
+                    <option value="SS" selected>Social Sciences</option>
+                    <option value="NS">Natural Sciences</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+          <div class="field">
+            <label for="grade" class="label">Upper or Lower Division</label>
+            <div class="control">
+              <div class="select is-fullwidth">
+                <select name="grade" id="grade">
+                  <option value="upper" selected>Upper Division (3XXX - 4XXXX)</option>
+                  <option value="lower">Lower Division (1XXX - 2XXX)</option>
+                  <option value="both">Both (1XXXX - 4XXXX)</option>
+                  <option value="grad">Graduate Level (>= 5000)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+      
+        
+        
+        <button type="button" onclick="getClassesByDivision()" class="button is-primary is-loading is-fullwidth is-medium" disabled>Get Classes & Average Grades</button>
+        <form>
+          <div id="table-container-division"></div>
+        </form>
+      </div>
     </section>
-    <br>
-    <br>
-    </main>
-    <script type="text/javascript">
+        <script type="text/javascript">
         let SQL = undefined
         let db = undefined
 
@@ -122,10 +155,11 @@
                 classCodeDatalist.appendChild(option);
             }
 
-            document.getElementById("database-loading").textContent = "Database loaded!";
+            // document.getElementById("database-loading").textContent = "Database loaded!";
             let buttons = document.getElementsByTagName("button");
             for (let i = 0; i < buttons.length; i++) {
                 buttons[i].disabled = false;
+                buttons[i].classList.remove("is-loading")
             }
             
 
@@ -160,6 +194,7 @@
             const tableContainer = document.getElementById(className);
             const table = document.createElement("table");
             table.classList.add("sortable")
+            table.classList.add("table")
             const thead = document.createElement("thead");
             const tbody = document.createElement("tbody");
             const headerRow = document.createElement("tr");
@@ -282,6 +317,5 @@
 }
 
     </script>
-</body>
-
+  </body>
 </html>
