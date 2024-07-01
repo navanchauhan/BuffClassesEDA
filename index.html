@@ -1,12 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
  <head> 
-  <meta charset="utf-8"> 
-  <meta name="viewport" content="width=device-width, initial-scale=1"> 
+  <meta charset="utf-8" /> 
+  <meta name="viewport" content="width=device-width, initial-scale=1" /> 
   <title>CU Boulder Grades Database</title> 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.9.0/sql-wasm.js" onload="" integrity="sha512-PAyD/84QEfxE1X/H3RDJY9kqXtJObyGq6qA93+LnkMNWdTLHjcTKHsDOcz6Y5xAdsaMGItRP5vNs4vtj3/FRuw==" crossorigin="anonymous" referrerpolicy="no-referrer"></script> 
   <script src="sorttable.js"></script> 
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.1/css/bulma.min.css"> 
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.1/css/bulma.min.css" /> 
   <script defer="" data-domain="web.navan.dev" src="https://plausible.io/js/script.js"></script> 
  </head> 
  <body> 
@@ -16,7 +16,7 @@
     <p class="subtitle"> Database contains data from <strong>Spring 2016</strong> to <strong>Spring 2024</strong> </p> 
     <form> 
      <textarea id="output" rows="10" cols="80" class="textarea"></textarea> 
-     <input type="text" id="query" value="SELECT COUNT(*) FROM raw_data" class="input"> 
+     <input type="text" id="query" value="SELECT COUNT(*) FROM raw_data" class="input" /> 
      <button type="button" value="Run Raw Query" onclick="run()" class="button is-info is-loading is-fullwidth" disabled="">Run Raw Query</button> 
     </form> 
    </div> 
@@ -26,16 +26,16 @@
     <h2 class="title is-2"> Search </h2> 
     <h3 class="title is-3"> By Instructor </h3> 
     <p class="subtitle">Find classes, and average grades for a given instructor</p> 
-    <p>Since CU provides instructor names in the format </p>
-    <pre>Last Name, First Name</pre> It is best if you start typing the last name first.
+    <p>Since CU provides instructor names in the format </p> 
+    <pre>Last Name, First Name</pre> It is best if you start typing the last name first. 
     <p></p> 
     <div class="field is-grouped pt-2"> 
      <div class="control is-expanded"> 
-      <input type="text" id="instructor" name="instructor" list="instructors" class="input is-medium" placeholder="Instructor"> 
+      <input type="text" id="instructor" name="instructor" list="instructors" class="input" placeholder="Instructor" /> 
       <datalist id="instructors"></datalist> 
      </div> 
      <div class="control"> 
-      <button type="button" onclick="getClassesByInstructor()" class="button is-primary is-loading is-medium" disabled="">Get Classes &amp; Average Grades</button> 
+      <button type="button" onclick="getClassesByInstructor()" class="button is-primary is-loading" disabled="">Search</button> 
      </div> 
     </div> 
     <form> 
@@ -44,16 +44,16 @@
    </div> 
    <div class="container"> 
     <h3 class="title is-3"> By Class Code </h3> 
-    <p>There is a space between the subject and course code. For example: </p>
-    <pre>CSCI 1300</pre>
+    <p>There is a space between the subject and course code. For example: </p> 
+    <pre>CSCI 1300</pre> 
     <p></p> 
     <div class="field is-grouped pt-2"> 
      <div class="control is-expanded"> 
-      <input type="text" id="classCode" name="classCode" list="classCodes" class="input is-medium" placeholder="Class Code"> 
+      <input type="text" id="classCode" name="classCode" list="classCodes" class="input" placeholder="Class Code" /> 
       <datalist id="classCodes"></datalist> 
      </div> 
      <div class="control"> 
-      <button type="button" onclick="getClassesByClassCode()" class="button is-primary is-loading is-medium" disabled="">Get Instructors &amp; Average Grades</button> 
+      <button type="button" onclick="getClassesByClassCode()" class="button is-primary is-loading" disabled="">Search</button> 
      </div> 
     </div> 
     <form> 
@@ -79,7 +79,7 @@
       </div> 
      </div> 
     </div> 
-    <button type="button" onclick="getClassesByDivision()" class="button is-primary is-loading is-fullwidth is-medium" disabled="">Get Classes &amp; Average Grades</button> 
+    <button type="button" onclick="getClassesByDivision()" class="button is-primary is-loading is-fullwidth" disabled="">Get Classes &amp; Average Grades</button> 
     <form> 
      <div id="table-container-division"></div> 
     </form> 
